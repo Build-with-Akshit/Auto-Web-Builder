@@ -152,6 +152,12 @@
 
         // --- Core Logic ---
 
+        function syncViews(html) {
+            state.html = html;
+            document.getElementById('previewFrame').srcdoc = html;
+            document.getElementById('codeEditor').value = html;
+        }
+
         async function handleSend(e) {
             e.preventDefault();
             const input = document.getElementById('promptInput');
@@ -219,9 +225,7 @@
             // Remove markdown if model hallucinates it despite prompt
             let cleanCode = code.replace(/```html/g, '').replace(/```/g, '');
             
-            state.html = cleanCode;
-            document.getElementById('previewFrame').srcdoc = cleanCode;
-            document.getElementById('codeEditor').value = cleanCode;
+            syncViews(cleanCode);
             
             // Save to current project
             const projIndex = state.projects.findIndex(p => p.id === state.currentId);
@@ -252,9 +256,7 @@
             const project = state.projects.find(p => p.id === id);
             if (!project) return;
 
-            state.html = project.html;
-            document.getElementById('previewFrame').srcdoc = project.html;
-            document.getElementById('codeEditor').value = project.html;
+            syncViews(project.html);
             
             renderProjectList();
             saveState();
