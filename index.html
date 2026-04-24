@@ -134,9 +134,10 @@
         let state = {
             projects: [],
             currentId: null,
+            currentProject: null,
             html: '',
             settings: {
-                url: "[https://openrouter.ai/api/v1/chat/completions](https://openrouter.ai/api/v1/chat/completions)",
+                url: "https://openrouter.ai/api/v1/chat/completions",
                 key: "",
                 model: "deepseek/deepseek-r1:free"
             }
@@ -210,7 +211,7 @@
             } finally {
                 input.disabled = false;
                 btn.disabled = false;
-                btn.innerHTML = '<svg xmlns="[http://www.w3.org/2000/svg](http://www.w3.org/2000/svg)" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>';
+                btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>';
                 input.focus();
             }
         }
@@ -224,10 +225,9 @@
             document.getElementById('codeEditor').value = cleanCode;
             
             // Save to current project
-            const projIndex = state.projects.findIndex(p => p.id === state.currentId);
-            if (projIndex >= 0) {
-                state.projects[projIndex].html = cleanCode;
-                state.projects[projIndex].updated = new Date().toISOString();
+            if (state.currentProject) {
+                state.currentProject.html = cleanCode;
+                state.currentProject.updated = new Date().toISOString();
                 saveState();
             }
         }
@@ -252,6 +252,7 @@
             const project = state.projects.find(p => p.id === id);
             if (!project) return;
 
+            state.currentProject = project;
             state.html = project.html;
             document.getElementById('previewFrame').srcdoc = project.html;
             document.getElementById('codeEditor').value = project.html;
@@ -335,7 +336,8 @@
 
         // --- Storage ---
         function saveState() {
-            localStorage.setItem('ai_builder_state', JSON.stringify(state));
+            const { currentProject, ...toSave } = state;
+            localStorage.setItem('ai_builder_state', JSON.stringify(toSave));
         }
 
         function loadState() {
@@ -345,6 +347,10 @@
                 state.projects = parsed.projects || [];
                 state.settings = { ...state.settings, ...parsed.settings }; // Merge to keep defaults if new keys added
                 state.currentId = parsed.currentId;
+
+                if (state.currentId) {
+                    state.currentProject = state.projects.find(p => p.id === state.currentId) || null;
+                }
             }
         }
     </script>
